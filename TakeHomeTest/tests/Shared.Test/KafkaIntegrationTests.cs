@@ -1,11 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using Confluent.Kafka;
-using Microsoft.Extensions.Configuration;
-using Shared.Configuration;
-using Xunit;
-using Xunit.Abstractions;
-
 namespace Shared.Test
 {
     // These are integration tests which require a Kafka broker available.
@@ -40,13 +32,16 @@ namespace Shared.Test
                 StringComparison.OrdinalIgnoreCase
             );
 
-        [SkippableFact(DisplayName = "Integration: Kafka producer connectivity")]
+        [Fact(DisplayName = "Integration: Kafka producer connectivity")]
         public async Task KafkaProducerConnectivity_WhenEnabled()
         {
-            Skip.IfNot(
-                IsEnabled(),
-                "Kafka integration tests are disabled. Set ENABLE_KAFKA_INTEGRATION_TESTS=true to run."
-            );
+            if (!IsEnabled())
+            {
+                _output.WriteLine(
+                    "Kafka integration tests are disabled. Set ENABLE_KAFKA_INTEGRATION_TESTS=true to run."
+                );
+                return;
+            }
 
             try
             {
@@ -73,13 +68,16 @@ namespace Shared.Test
             }
         }
 
-        [SkippableFact(DisplayName = "Integration: Kafka consumer connectivity")]
+        [Fact(DisplayName = "Integration: Kafka consumer connectivity")]
         public void KafkaConsumerConnectivity_WhenEnabled()
         {
-            Skip.IfNot(
-                IsEnabled(),
-                "Kafka integration tests are disabled. Set ENABLE_KAFKA_INTEGRATION_TESTS=true to run."
-            );
+            if (!IsEnabled())
+            {
+                _output.WriteLine(
+                    "Kafka integration tests are disabled. Set ENABLE_KAFKA_INTEGRATION_TESTS=true to run."
+                );
+                return;
+            }
 
             try
             {

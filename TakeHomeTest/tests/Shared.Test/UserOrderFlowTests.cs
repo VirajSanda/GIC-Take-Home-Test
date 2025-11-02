@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace Shared.Test
 {
@@ -111,17 +105,22 @@ namespace Shared.Test
             );
         }
 
-        [SkippableFact(DisplayName = "Integration: User-Order Flow Synchronization")]
+        [Fact(DisplayName = "Integration: User-Order Flow Synchronization")]
         public async Task UserOrderFlow_Should_SynchronizeBetweenServices()
         {
-            Skip.IfNot(
-                string.Equals(
+            if (
+                !string.Equals(
                     Environment.GetEnvironmentVariable("ENABLE_INTEGRATION_TESTS"),
                     "true",
                     StringComparison.OrdinalIgnoreCase
-                ),
-                "Integration tests are disabled. Set ENABLE_INTEGRATION_TESTS=true to run."
-            );
+                )
+            )
+            {
+                _output.WriteLine(
+                    "Integration tests are disabled. Set ENABLE_INTEGRATION_TESTS=true to run."
+                );
+                return;
+            }
             await WaitForServicesAsync();
 
             // 1. Create User

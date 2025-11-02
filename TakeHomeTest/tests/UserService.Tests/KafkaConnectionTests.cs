@@ -33,7 +33,7 @@ namespace UserService.Tests
             }
             catch (ProduceException<Null, string> ex)
             {
-                Assert.False(true, $"❌ Kafka produce failed: {ex.Error.Reason}");
+                Assert.Fail($"❌ Kafka produce failed: {ex.Error.Reason}");
             }
         }
 
@@ -59,7 +59,7 @@ namespace UserService.Tests
             }
             catch (Exception ex)
             {
-                Assert.False(true, $"❌ Kafka consumer connection failed: {ex.Message}");
+                Assert.Fail($"❌ Kafka consumer connection failed: {ex.Message}");
             }
         }
     }
