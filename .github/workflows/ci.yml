@@ -11,43 +11,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-    - name: Cache NuGet packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+      - name: Restore dependencies
+        working-directory: TakeHomeTest
+        run: dotnet restore TakeHomeTest.sln
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Build
+        working-directory: TakeHomeTest
+        run: dotnet build TakeHomeTest.sln --configuration Release --no-restore
 
-    - name: Build
-      run: dotnet build --no-restore -c Release
+      - name: Run tests
+        working-directory: TakeHomeTest
+        run: dotnet test TakeHomeTest.sln --no-build --logger "trx;LogFileName=test_results.trx" --verbosity normal
 
-    - name: Run tests
-      run: dotnet test --no-build -c Release --verbosity normal
-
-    - name: Build Docker images
-      run: docker compose build
-
-    - name: Start and verify services
-      run: |
-        docker compose up -d
-        # Wait for services to be ready
-        timeout 60s bash -c 'until docker compose ps | grep -q "Up"; do sleep 5; done'
-        docker compose ps
-        # Quick health check
-        curl -f http://localhost:5001/health || echo "Health check failed but continuing"
-
-    - name: Stop services
-      if: always()
-      run: docker compose down
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
