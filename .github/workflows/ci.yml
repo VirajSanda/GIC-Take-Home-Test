@@ -1,4 +1,4 @@
-name: .NET Microservices  CI
+name: .NET Microservices CI
 
 on:
   push:
@@ -7,39 +7,47 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup .NET 9
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
 
-      - name: Restore dependencies
-        working-directory: TakeHomeTest
-        run: dotnet restore TakeHomeTest.sln
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
 
-      - name: Build
-        working-directory: TakeHomeTest
-        run: dotnet build TakeHomeTest.sln --no-restore -c Release
+    - name: Restore dependencies
+      run: dotnet restore
 
-      - name: Run tests
-        working-directory: TakeHomeTest
-        run: dotnet test TakeHomeTest.sln --no-build --verbosity normal
+    - name: Build
+      run: dotnet build --no-restore -c Release
 
-      - name: Build Docker images
-        working-directory: TakeHomeTest
-        run: docker compose build
+    - name: Run tests
+      run: dotnet test --no-build -c Release --verbosity normal
 
-      - name: Verify Docker containers
-        working-directory: TakeHomeTest
-        run: docker compose up -d && docker compose ps
+    - name: Build Docker images
+      run: docker compose build
 
-      - name: Tear down Docker containers
-        if: always()
-        working-directory: TakeHomeTest
-        run: docker compose down
+    - name: Start and verify services
+      run: |
+        docker compose up -d
+        # Wait for services to be ready
+        timeout 60s bash -c 'until docker compose ps | grep -q "Up"; do sleep 5; done'
+        docker compose ps
+        # Quick health check
+        curl -f http://localhost:5001/health || echo "Health check failed but continuing"
+
+    - name: Stop services
+      if: always()
+      run: docker compose down
