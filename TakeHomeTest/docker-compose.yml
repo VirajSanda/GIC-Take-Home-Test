@@ -28,14 +28,14 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    networks:
-      - kafka-net
     healthcheck:
       test: ["CMD", "kafka-topics", "--list", "--bootstrap-server", "kafka:9092"]
       interval: 10s
       timeout: 10s
       retries: 10
       start_period: 40s
+    networks:
+      - kafka-net
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -85,5 +85,53 @@ services:
       - KAFKA_GROUP_ID=order-service-group
     depends_on:
       - kafka
+    networks:
+      - kafka-net
+
+  integration-tests:
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    container_name: integration-tests
+    depends_on:
+      kafka:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - ENABLE_INTEGRATION_TESTS=true
+      - ENABLE_KAFKA_INTEGRATION_TESTS=true
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    command: >
+      sh -c "
+        echo '🔧 Restoring solution...' &&
+        dotnet restore TakeHomeTest.sln &&
+        echo '🏗️ Building solution...' &&
+        dotnet build TakeHomeTest.sln --configuration Release --no-restore &&
+        echo '🧪 Running integration tests...' &&
+        dotnet test tests/Shared.Test/Shared.Test.csproj -v normal --no-build
+      "
+    networks:
+      - kafka-net
+
+  healthchecks-ui:
+    image: xabarilcoding/healthchecksui:latest
+    container_name: healthchecks-ui
+    ports:
+      - "8085:80"
+    environment:
+      - HealthChecksUI__HealthChecks__0__Name=User Service
+      - HealthChecksUI__HealthChecks__0__Uri=http://user-service:8080/health
+      - HealthChecksUI__HealthChecks__1__Name=Order Service
+      - HealthChecksUI__HealthChecks__1__Uri=http://order-service:8080/health
+      - HealthChecksUI__EvaluationTimeInSeconds=30
+      - HealthChecksUI__MinimumSecondsBetweenFailureNotifications=60
+      - ASPNETCORE_URLS=http://+:80
+    depends_on:
+      - user-service
+      - order-service
     networks:
       - kafka-net

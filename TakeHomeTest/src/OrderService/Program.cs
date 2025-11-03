@@ -2,8 +2,6 @@ using Confluent.Kafka;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 using OrderServiceAPI.Consumers;
 using OrderServiceAPI.Interfaces;
