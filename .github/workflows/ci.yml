@@ -21,9 +21,10 @@ jobs:
 
       - name: Run Integration Tests via Docker Compose
         working-directory: TakeHomeTest
-        run: docker-compose up --build --exit-code-from integration-tests integration-tests
+        run: |
+          docker-compose -p takehometest up --build --exit-code-from integration-tests integration-tests
 
       - name: Tear Down Containers
         if: always()
         working-directory: TakeHomeTest
-        run: docker-compose down -v
+        run: docker-compose -p takehometest down -v
