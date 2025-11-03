@@ -7,67 +7,23 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build-test:
     runs-on: ubuntu-latest
 
-    services:
-      zookeeper:
-        image: bitnami/zookeeper:3.9
-        ports:
-          - 2181:2181
-        env:
-          ALLOW_ANONYMOUS_LOGIN: "yes"
-
-      kafka:
-        image: bitnami/kafka:3.7
-        ports:
-          - 9092:9092
-        env:
-          KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
-          KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
-          ALLOW_PLAINTEXT_LISTENER: "yes"
-        options: >-
-          --health-cmd="kafka-topics.sh --bootstrap-server localhost:9092 --list"
-          --health-interval=10s
-          --health-timeout=10s
-          --health-retries=10
-
     steps:
-      - name: 🧾 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup .NET
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      - name: 📦 Restore dependencies
-        run: dotnet restore TakeHomeTest.sln
+      - name: Run Integration Tests via Docker Compose
+        working-directory: TakeHomeTest
+        run: docker-compose up --build --exit-code-from integration-tests integration-tests
 
-      - name: 🏗️ Build solution
-        run: dotnet build TakeHomeTest.sln --configuration Release --no-restore
-
-      - name: 🧪 Run Unit Tests
-        run: dotnet test TakeHomeTest.sln --configuration Release --logger "trx;LogFileName=test_results.trx" --verbosity normal
-
-      - name: 🧰 Set integration test environment
-        run: |
-          echo "ENABLE_INTEGRATION_TESTS=true" >> $GITHUB_ENV
-          echo "ENABLE_KAFKA_INTEGRATION_TESTS=true" >> $GITHUB_ENV
-          echo "KAFKA_BOOTSTRAP_SERVERS=localhost:9092" >> $GITHUB_ENV
-
-      - name: 🚀 Run Integration Tests (via Docker Compose)
-        run: |
-          docker-compose -f docker-compose.yml up --build --exit-code-from integration-tests integration-tests
-
-      - name: 📤 Upload test results
+      - name: Tear Down Containers
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: '**/TestResults/*.trx'
-
-      - name: 🧹 Tear down Docker environment
-        if: always()
-        run: docker-compose -f docker-compose.yml down -v
+        working-directory: TakeHomeTest
+        run: docker-compose down -v
