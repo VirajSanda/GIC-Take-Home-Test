@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,21 +19,11 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore dependencies
+      - name: Run Integration Tests via Docker Compose
         working-directory: TakeHomeTest
-        run: dotnet restore TakeHomeTest.sln
+        run: docker-compose up --build --exit-code-from integration-tests integration-tests
 
-      - name: Build
-        working-directory: TakeHomeTest
-        run: dotnet build TakeHomeTest.sln --configuration Release --no-restore
-
-      - name: Run tests
-        working-directory: TakeHomeTest
-        run: dotnet test TakeHomeTest.sln --logger "trx;LogFileName=test_results.trx" --verbosity normal
-
-      - name: Upload test results
+      - name: Tear Down Containers
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: '**/TestResults/*.trx'
+        working-directory: TakeHomeTest
+        run: docker-compose down -v
