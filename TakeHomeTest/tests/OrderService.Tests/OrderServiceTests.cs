@@ -25,10 +25,19 @@ namespace OrderService.Tests
             using (var db = new AppDbContext(options))
             {
                 var service = new OrderSvc(mockLogger.Object, mockProducer.Object, db);
-
+                var userId = Guid.NewGuid();
+                await db.Users.AddAsync(
+                    new User
+                    {
+                        UserId = userId,
+                        Name = "Test",
+                        Email = "test@gmail.com",
+                    }
+                );
+                await db.SaveChangesAsync();
                 var req = new CreateOrderRequest
                 {
-                    UserId = Guid.NewGuid(),
+                    UserId = userId,
                     Product = "P",
                     Quantity = 1,
                     Price = 9.99m,
@@ -119,13 +128,24 @@ namespace OrderService.Tests
             var options = CreateOptions(Guid.NewGuid().ToString());
             var mockLogger = new Mock<ILogger<OrderSvc>>();
             var mockProducer = new Mock<IKafkaProducerService>();
-
-            using (var db = new FaultyAppDbContext(options))
+            var db = new AppDbContext(options);
+            var userId = Guid.NewGuid();
+            await db.Users.AddAsync(
+                new User
+                {
+                    UserId = userId,
+                    Name = "Test",
+                    Email = "test@gmail.com",
+                }
+            );
+            db.SaveChanges();
+            using (db = new FaultyAppDbContext(options))
             {
                 var service = new OrderSvc(mockLogger.Object, mockProducer.Object, db);
+
                 var req = new CreateOrderRequest
                 {
-                    UserId = Guid.NewGuid(),
+                    UserId = userId,
                     Product = "P",
                     Quantity = 1,
                     Price = 1,
@@ -157,9 +177,19 @@ namespace OrderService.Tests
             using (var db = new AppDbContext(options))
             {
                 var service = new OrderSvc(mockLogger.Object, mockProducer.Object, db);
+                var userId = Guid.NewGuid();
+                await db.Users.AddAsync(
+                    new User
+                    {
+                        UserId = userId,
+                        Name = "Test",
+                        Email = "test@gmail.com",
+                    }
+                );
+                await db.SaveChangesAsync();
                 var req = new CreateOrderRequest
                 {
-                    UserId = Guid.NewGuid(),
+                    UserId = userId,
                     Product = "Q",
                     Quantity = 2,
                     Price = 5,
