@@ -108,6 +108,17 @@ dotnet test
    - Publishes OrderCreatedEvent
    - UserService consumes the event and updates user's order history
 
+## Use of AI
+
+- During the documentation and commenting, AI promts were used to get the best outcome
+- Copilot and other AI tools used to refactor code and reviewed before accepting the suggetions.
+- During Unit test development, used AI to cover most of the code coverage and to write unit test cases.
+- Also verify architectural and code base design, and with the effecting suggestions to achive the better structure.
+
+## Additional
+<img width="1624" height="834" alt="Heath Checks" src="https://github.com/user-attachments/assets/828b7342-3460-43ef-a6d1-2a89401a2aff" />
+<img width="1896" height="835" alt="Kafka UI" src="https://github.com/user-attachments/assets/f68449bd-c2bd-446f-87b6-d2c3f2f9af71" />
+
 ## Contributing
 
 Please read the contributing guidelines before submitting any pull requests.
