@@ -43,6 +43,19 @@ namespace OrderServiceAPI.Controllers
         }
 
         /// <summary>
+        /// Gets all users.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("existing-users")]
+        public async Task<IActionResult> GetUsersAsync()
+        {
+            var user = await _orderService.GetUsers();
+            if (user.Count == 0)
+                return NotFound("No cached users found");
+            return Ok(user);
+        }
+
+        /// <summary>
         /// Creates a new order.
         /// </summary>
         [HttpPost]

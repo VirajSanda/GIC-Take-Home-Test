@@ -48,6 +48,13 @@ namespace OrderServiceAPI.Services
                         ErrorMessage = "UserId is required",
                     };
 
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == request.UserId);
+                if (user == null)
+                    return new ServiceResult<Order>
+                    {
+                        Success = false,
+                        ErrorMessage = "User not found",
+                    };
                 var order = new Order
                 {
                     UserId = request.UserId,
